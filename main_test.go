@@ -30,9 +30,9 @@ type Customer struct {
 }
 
 type CompanyCustomer struct {
-	TableName struct{} `sql:"companies_customers"`
-	CompanyID int64 `sql:"company_id"`
-	CustomerID int64 `sql:"customer_id"`
+	TableName  struct{} `sql:"companies_customers"`
+	CompanyID  int64    `sql:"company_id"`
+	CustomerID int64    `sql:"customer_id"`
 }
 
 const (
@@ -61,15 +61,16 @@ func TestMain(m *testing.M) {
 
 func TestCompaniesIsNotEmpty(t *testing.T) {
 	as := assert.New(t)
-	cust := &Customer{
-		Name: "customer " + babbler.Babble(),
-	}
-	if !as.NoError(db.Insert(cust)) {
-		return
-	}
 	customers := []*Customer{
-		cust,
+		{Name: "customer 1" + babbler.Babble()},
+		{Name: "customer 2" + babbler.Babble()},
 	}
+	for _, cust := range customers {
+		if !as.NoError(db.Insert(cust)) {
+			return
+		}
+	}
+
 	com := &Company{
 		Name:      babbler.Babble(),
 		Customers: customers,
@@ -87,8 +88,12 @@ func TestCompaniesIsNotEmpty(t *testing.T) {
 	if !as.NoError(db.Model(&compSelect).Column("Customers").First()) {
 		return
 	}
-	as.NotZero(compSelect.ID)
-	as.Len(compSelect.Customers, 1)
+	if !as.NotZero(compSelect.ID) {
+		return
+	}
+	if !as.Len(compSelect.Customers, len(customers)) {
+		return
+	}
 }
 
 func connectToPostgresTimeout(connectionString string, timeout, retry time.Duration) (*pg.DB, error) {
