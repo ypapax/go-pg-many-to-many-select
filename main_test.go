@@ -29,6 +29,12 @@ type Customer struct {
 	Companies []*Company `pg:",many2many:companies_customers"`
 }
 
+type CompanyCustomer struct {
+	TableName struct{} `sql:"companies_customers"`
+	CompanyID int64 `sql:"company_id"`
+	CustomerID int64 `sql:"customer_id"`
+}
+
 const (
 	wordsCount = 5
 )
@@ -55,15 +61,27 @@ func TestMain(m *testing.M) {
 
 func TestCompaniesIsNotEmpty(t *testing.T) {
 	as := assert.New(t)
-	cust := []*Customer{
-		{Name: "customer " + babbler.Babble()},
+	cust := &Customer{
+		Name: "customer " + babbler.Babble(),
+	}
+	if !as.NoError(db.Insert(cust)) {
+		return
+	}
+	customers := []*Customer{
+		cust,
 	}
 	com := &Company{
 		Name:      babbler.Babble(),
-		Customers: cust,
+		Customers: customers,
 	}
 	if !as.NoError(db.Insert(com)) {
 		return
+	}
+	for _, cus := range customers {
+		companyCustomer := &CompanyCustomer{CompanyID: com.ID, CustomerID: cus.ID}
+		if err := db.Insert(companyCustomer); !as.NoError(err) {
+			return
+		}
 	}
 	var compSelect Company
 	if !as.NoError(db.Model(&compSelect).Column("Customers").First()) {
