@@ -85,7 +85,7 @@ func TestTwoCustomers(t *testing.T) {
 		}
 	}
 	var compSelect Company
-	if !as.NoError(db.Model(&compSelect).Column("Customers").First()) {
+	if !as.NoError(db.Model(&compSelect).Column("Customers").Where("company.name = ?", com.Name).Select()) {
 		return
 	}
 	if !as.NotZero(compSelect.ID) {
