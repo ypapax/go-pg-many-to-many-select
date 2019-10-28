@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestCompaniesIsNotEmpty(t *testing.T) {
+func TestTwoCustomers(t *testing.T) {
 	as := assert.New(t)
 	customers := []*Customer{
 		{Name: "customer 1" + babbler.Babble()},
@@ -92,6 +92,47 @@ func TestCompaniesIsNotEmpty(t *testing.T) {
 		return
 	}
 	if !as.Len(compSelect.Customers, len(customers)) {
+		return
+	}
+}
+
+func TestTwoCompanies(t *testing.T) {
+	as := assert.New(t)
+	companies := []*Company{
+		{Name: "company 1" + babbler.Babble()},
+		{Name: "company 2" + babbler.Babble()},
+	}
+	for _, comp := range companies {
+		if !as.NoError(db.Insert(comp)) {
+			return
+		}
+	}
+
+	cust := &Customer{
+		Name:      babbler.Babble(),
+		Companies: companies,
+	}
+	if !as.NoError(db.Insert(cust)) {
+		return
+	}
+	for _, com := range companies {
+		companyCustomer := &CompanyCustomer{CompanyID: com.ID, CustomerID: cust.ID}
+		if err := db.Insert(companyCustomer); !as.NoError(err) {
+			return
+		}
+	}
+	var custSelect Customer
+	if !as.NoError(db.Model(&custSelect).Column("Companies").Where("customer.name = ?", cust.Name).Select()) {
+		return
+	}
+	t.Logf("custSelect %+v", custSelect)
+	if !as.Equal(cust.Name, custSelect.Name) {
+		return
+	}
+	if !as.NotZero(custSelect.ID) {
+		return
+	}
+	if !as.Len(custSelect.Companies, len(companies)) {
 		return
 	}
 }
