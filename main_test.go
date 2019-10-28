@@ -94,6 +94,10 @@ func TestTwoCustomers(t *testing.T) {
 	if !as.Len(compSelect.Customers, len(customers)) {
 		return
 	}
+
+	for i, c1 := range customers {
+		as.Equal(c1.Name, compSelect.Customers[i].Name)
+	}
 }
 
 func TestTwoCompanies(t *testing.T) {
@@ -134,6 +138,9 @@ func TestTwoCompanies(t *testing.T) {
 	}
 	if !as.Len(custSelect.Companies, len(companies)) {
 		return
+	}
+	for i, c1 := range companies {
+		as.Equal(c1.Name, custSelect.Companies[i].Name)
 	}
 }
 
