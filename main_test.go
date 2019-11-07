@@ -142,6 +142,9 @@ func TestTwoCompanies(t *testing.T) {
 	for i, c1 := range companies {
 		as.Equal(c1.Name, custSelect.Companies[i].Name)
 	}
+	for _, comp := range custSelect.Companies {
+		t.Logf("company %+v", comp)
+	}
 }
 
 func connectToPostgresTimeout(connectionString string, timeout, retry time.Duration) (*pg.DB, error) {
